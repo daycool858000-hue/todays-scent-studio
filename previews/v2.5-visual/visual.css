@@ -73,3 +73,6 @@
 }
 
 .intro #homeArt.vfx-canvas-ready .fluid-vessel{opacity:0!important;}
+
+/* Original scene asset replaces the low-detail collage for Moon-Eclipse Conservatory. */
+.app[data-scene="greenhouse"]{--realm-bg:url("assets/greenhouse.webp")!important;}
