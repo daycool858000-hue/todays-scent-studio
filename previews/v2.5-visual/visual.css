@@ -76,3 +76,25 @@
 
 /* Original scene asset replaces the low-detail collage for Moon-Eclipse Conservatory. */
 .app[data-scene="greenhouse"]{--realm-bg:url("assets/greenhouse.webp")!important;}
+
+/* 10 independently generated CGI worlds; image URLs remain local to this preview. */
+.app[data-scene="night"]{--realm-bg:url("assets/night.webp")!important;}
+.paint-night{--paint-img:url("assets/night.webp")!important;}
+.app[data-scene="ice"]{--realm-bg:url("assets/ice.webp")!important;}
+.paint-ice{--paint-img:url("assets/ice.webp")!important;}
+.app[data-scene="tide"]{--realm-bg:url("assets/tide.webp")!important;}
+.paint-tide{--paint-img:url("assets/tide.webp")!important;}
+.app[data-scene="rose"]{--realm-bg:url("assets/rose.webp")!important;}
+.paint-rose{--paint-img:url("assets/rose.webp")!important;}
+.app[data-scene="greenhouse"]{--realm-bg:url("assets/greenhouse.webp")!important;}
+.paint-greenhouse{--paint-img:url("assets/greenhouse.webp")!important;}
+.app[data-scene="archive"]{--realm-bg:url("assets/archive.webp")!important;}
+.paint-archive{--paint-img:url("assets/archive.webp")!important;}
+.app[data-scene="floating"]{--realm-bg:url("assets/floating.webp")!important;}
+.paint-floating{--paint-img:url("assets/floating.webp")!important;}
+.app[data-scene="clock"]{--realm-bg:url("assets/clock.webp")!important;}
+.paint-clock{--paint-img:url("assets/clock.webp")!important;}
+.app[data-scene="amber"]{--realm-bg:url("assets/amber.webp")!important;}
+.paint-amber{--paint-img:url("assets/amber.webp")!important;}
+.app[data-scene="prism"]{--realm-bg:url("assets/prism.webp")!important;}
+.paint-prism{--paint-img:url("assets/prism.webp")!important;}
