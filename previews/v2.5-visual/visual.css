@@ -71,3 +71,5 @@
  #blendingScreen #blendingArt.vfx-canvas-ready .bottle-img,
  #blendingScreen #blendingArt.vfx-canvas-ready .fluid-vessel{opacity:1!important;}
 }
+
+.intro #homeArt.vfx-canvas-ready .fluid-vessel{opacity:0!important;}
