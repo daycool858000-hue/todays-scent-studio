@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { PNG } from 'pngjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -75,6 +75,50 @@ try{
  report.checks.saved = await page.locator('#savedNum').textContent();
  await requireTrue(!errors.length,'JavaScript console errors: '+errors.join(' | '));
  report.checks.errors=errors;
+ // Check each background from its actual local asset, not a simulated palette.
+ const keys=['night','ice','tide','rose','greenhouse','archive','floating','clock','amber','prism'];
+ report.checks.scenes={};
+ const backgroundPage=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+ for(const key of keys){
+   await backgroundPage.goto(BASE+'?scene='+key,{waitUntil:'domcontentloaded',timeout:60000});
+   await backgroundPage.waitForFunction(k=>document.getElementById('app')?.dataset.scene===k,key,{timeout:10000});
+   const scene=await backgroundPage.evaluate(async k=>{
+     const bg=getComputedStyle(document.querySelector('#app'),'::before').backgroundImage;
+     const src='./assets/'+k+'.webp';
+     const im=new Image();
+     im.src=src;
+     await im.decode();
+     return {width:im.naturalWidth,height:im.naturalHeight,
+       matchedAsset:bg.includes(k+'.webp'),
+       assetUrl:im.src,loaded:im.complete};
+   },key);
+   await requireTrue(scene.matchedAsset&&scene.loaded&&scene.width>=800&&scene.height>=1100,'Scene asset missing/invalid: '+key);
+   report.checks.scenes[key]={width:scene.width,height:scene.height,assetOK:true};
+   await backgroundPage.screenshot({path:out+'/scene-'+key+'.png',animations:'disabled'});
+ }
+ await backgroundPage.close();
+ // Playwright WebKit is a Safari-engine proxy, not a real iPhone Safari device.
+ report.checks.webkit={};
+ const wk=await webkit.launch({headless:true});
+ const wp=await wk.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true,locale:'zh-TW'});
+ const wkErrors=[];
+ wp.on('pageerror',e=>wkErrors.push(e.message));
+ await wp.goto(BASE+'?scene=greenhouse',{waitUntil:'domcontentloaded',timeout:60000});
+ await wp.waitForFunction(()=>document.getElementById('homeArt')?.classList.contains('vfx-canvas-ready'),null,{timeout:20000});
+ report.checks.webkit.scene=await wp.locator('#app').getAttribute('data-scene');
+ report.checks.webkit.introCanvas=await wp.locator('#homeArt canvas').count();
+ await wp.screenshot({path:out+'/webkit-intro.png'});
+ await wp.locator('#begin').click();
+ await wp.locator('#search').fill('玫瑰');
+ await wp.locator('#ingredientGrid .ingredient').first().click();
+ report.checks.webkit.selected=await wp.locator('#chosenCount').textContent();
+ await requireTrue(report.checks.webkit.selected==='1','WebKit material selection failed');
+ await wp.locator('#compose').click();
+ await wp.waitForFunction(()=>!document.getElementById('resultScreen').hidden,null,{timeout:12000});
+ report.checks.webkit.result=await wp.locator('#resultName').textContent();
+ await requireTrue(!wkErrors.length,'WebKit JavaScript errors: '+wkErrors.join(' | '));
+ report.checks.webkit.errors=wkErrors;
+ await wk.close();
  report.success=true;
 }catch(e){
  report.success=false;report.error=String(e.stack||e);
