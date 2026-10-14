@@ -71,11 +71,11 @@
     const wave=2+12*sin(Math.PI*clamp((p-.25)/.7))*sin(t*.007);
     const fill=c.createLinearGradient(70,target,325,bottom);
     fill.addColorStop(0,palette[0]);fill.addColorStop(.44,palette[1]);fill.addColorStop(1,palette[2]);
-    c.globalAlpha=.73;
+    c.globalAlpha=.30;
     c.beginPath();c.moveTo(35,target);
     for(let x=35;x<=W+10;x+=9){const y=target+wave*sin(x*.034-t*.010)+4*sin(x*.08+t*.014);c.lineTo(x,y);}
     c.lineTo(W+15,H+15);c.lineTo(30,H+15);c.closePath();c.fillStyle=fill;c.fill();
-    c.globalAlpha=.45;c.strokeStyle='rgba(241,253,255,.72)';c.lineWidth=2;
+    c.globalAlpha=.18;c.strokeStyle='rgba(241,253,255,.72)';c.lineWidth=2;
     c.beginPath();for(let x=55;x<=W-55;x+=6){const y=target+wave*sin(x*.034-t*.010)+4*sin(x*.08+t*.014);x===55?c.moveTo(x,y):c.lineTo(x,y);}c.stroke();
     const boil=clamp((p-.33)/.22)*clamp((.92-p)/.17);
     for(let i=0;i<25;i++){
@@ -92,21 +92,32 @@
     const f=fit(obj.canvas);if(!f)return;
     const {c,w,h}=f,img=obj.img,g=dimension(obj,w,h);
     const introMode=mode==='intro',morph=introMode?1-smooth((p-.19)/.64):clamp(sin(Math.PI*smooth((p-.08)/.84)),0,1);
-    const deformation=morph*(introMode?.39:.18);
+    const deformation=morph*(introMode?.13:.085);
     const apparition=introMode?smooth((p-.03)/.25):smooth((p-.01)/.14);
     c.globalAlpha=apparition;
-    const pieces=66,srcStep=g.sourceH/pieces,dstStep=g.dh/pieces;
+    // Clip original decorative images to recognizable glass silhouettes; they contain baked backgrounds.
+    // This is a rendering mask, not a new container type.
+    const specimen=obj.el.dataset.vessel==='specimen';
+    const SW=specimen?422:455,SH=specimen?762:688;
+    const silhouette=specimen?
+      'M213 27 C245 27 267 53 267 89 C268 124 245 157 216 161 C184 161 158 131 158 96 C157 56 177 27 213 27 Z M150 143 L282 143 L289 245 Q353 249 357 306 L356 683 Q356 720 332 724 L84 724 Q69 717 70 683 L70 306 Q73 255 135 245 Z M52 704 L379 704 L381 755 L44 755 Z M339 271 L392 292 L397 420 L347 432 Z':
+      'M224 22 C260 22 281 46 283 86 C282 123 262 153 225 155 C187 154 167 124 169 85 C170 48 187 22 224 22 Z M176 143 L276 143 L282 259 Q359 266 396 330 C430 400 418 504 376 547 Q323 612 226 606 Q113 607 73 550 C29 504 27 406 60 335 Q96 267 169 259 Z M35 602 L416 602 L421 684 L27 684 Z';
+    c.save();
+    c.translate(g.x,g.y);c.scale(g.dw/SW,g.dh/SH);c.clip(new Path2D(silhouette));
+    c.setTransform(dpr(),0,0,dpr(),0,0);
+    const pieces=150,srcStep=g.sourceH/pieces,dstStep=g.dh/pieces;
     for(let i=0;i<pieces;i++){
       const q=(i+.5)/pieces;
       const bell=sin(Math.PI*q);
       const swell=(sin(q*12.5+t*.0043)+.48*sin(q*27-t*.0031))*deformation*bell;
       const widthRatio=clamp(1+swell,.55,1.35);
-      const slide=sin(q*13-t*.0035)*deformation*g.dw*.16;
-      const offsetY=(introMode?(1-smooth((p-.05)/.44))*.055*sin(q*31+t*.004)*g.dh:0);
+      const slide=sin(q*13-t*.0035)*deformation*g.dw*.035;
+      const offsetY=(introMode?(1-smooth((p-.05)/.44))*.012*sin(q*31+t*.004)*g.dh:0);
       const ww=g.dw*widthRatio;
-      c.drawImage(img,0,i*srcStep,g.sourceW,srcStep+1,g.x+(g.dw-ww)/2+slide,g.y+i*dstStep+offsetY,ww,dstStep+1.8);
+      c.drawImage(img,0,i*srcStep,g.sourceW,srcStep+1,g.x+(g.dw-ww)/2+slide,g.y+i*dstStep+offsetY,ww,dstStep+.35);
     }
     c.globalAlpha=1;
+    c.restore();
     c.save();paintLiquid(c,g,t,p,obj.el.dataset.vessel==='specimen');c.restore();
     // Restrained moving glass highlights, limited to the object silhouette.
     c.save();c.globalCompositeOperation='screen';
