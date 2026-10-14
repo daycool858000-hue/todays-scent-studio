@@ -1,0 +1,33 @@
+name: V2.5 Visual Smoke Test
+on:
+  push:
+    paths:
+      - 'previews/v2.5-visual/**'
+      - 'tests/visual-smoke.mjs'
+      - '.github/workflows/visual-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  iphone-viewport-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test browser
+        run: |
+          npm install --no-save playwright pngjs
+          npx playwright install --with-deps chromium
+      - name: Serve preview
+        run: python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/scent-server.log 2>&1 &
+      - name: Run iPhone viewport smoke and inspect animation frames
+        run: node tests/visual-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v25-visual-mobile-screenshots
+          path: test-artifacts/
+          retention-days: 7
