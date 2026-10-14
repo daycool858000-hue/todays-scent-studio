@@ -20,7 +20,7 @@ jobs:
       - name: Install test browser
         run: |
           npm install --no-save playwright pngjs
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
       - name: Serve preview
         run: python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/scent-server.log 2>&1 &
       - name: Run iPhone viewport smoke and inspect animation frames
