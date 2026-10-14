@@ -4,7 +4,7 @@
   const home=document.getElementById('homeArt'),mix=document.getElementById('blendingArt');
   if(!intro||!blend||!home||!mix)return;
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const duration=7100, start=performance.now();
+  const duration=7100; let introStart=performance.now();
   let blendingStart=0, raf=0, bottleIntro=null,bottleBlend=null,field=null,prevPhase=-1;
   let lost=false, frame=0;
   const clamp=(n,a=0,b=1)=>Math.min(b,Math.max(a,n));
@@ -107,9 +107,7 @@
       c.drawImage(img,0,i*srcStep,g.sourceW,srcStep+1,g.x+(g.dw-ww)/2+slide,g.y+i*dstStep+offsetY,ww,dstStep+1.8);
     }
     c.globalAlpha=1;
-    if(!introMode){
-      c.save();paintLiquid(c,g,t,p,obj.el.dataset.vessel==='specimen');c.restore();
-    }
+    c.save();paintLiquid(c,g,t,p,obj.el.dataset.vessel==='specimen');c.restore();
     // Restrained moving glass highlights, limited to the object silhouette.
     c.save();c.globalCompositeOperation='screen';
     const sheen=c.createLinearGradient(g.x,g.y,g.x+g.dw,g.y+g.dh);
@@ -137,8 +135,10 @@
     }
   }
   function introWorld(t,p){
-    if(!bottleIntro)return;const f=fit(bottleIntro.canvas);if(!f)return;
-    const {c,w,h}=f;
+    if(!bottleIntro)return;const canvas=bottleIntro.canvas;
+    const c=canvas.getContext('2d');if(!c)return;
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    c.setTransform(dpr(),0,0,dpr(),0,0);
     const cx=w/2,cy=h*.48;
     vapor(c,cx,cy+65,t,Math.min(w,h)*.34,.85);
     c.save();
@@ -217,10 +217,9 @@
   function tick(t){
     raf=0;if(!isActive())return;
     if(!intro.hidden&&bottleIntro?.img?.complete){
-      const p=clamp((t-start)/5400);
-      introWorld(t,p);
-      // Draw vapor/accumulation first; vessel overlays it.
+      const p=clamp((t-introStart)/5400);
       paintVessel(bottleIntro,t,p,'intro');
+      introWorld(t,p);
     }
     if(!blend.hidden&&bottleBlend?.img?.complete){
       const p=clamp((t-blendingStart)/duration);
@@ -229,6 +228,7 @@
       updatePhase(p);
     }
     frame++;
+    if(!intro.hidden&&blend.hidden&&t-introStart>5550)return;
     raf=requestAnimationFrame(tick);
   }
   const mo=new MutationObserver(()=>{
@@ -238,6 +238,8 @@
   });
   mo.observe(blend,{attributes:true,attributeFilter:['hidden']});
   mo.observe(intro,{attributes:true,attributeFilter:['hidden']});
+  const introObserver=new MutationObserver(()=>{if(!intro.hidden){introStart=performance.now();refresh();}});
+  introObserver.observe(intro,{attributes:true,attributeFilter:['hidden']});
   const rebuild=new MutationObserver(()=>{if(home.querySelector('.vfx-bottle-canvas')&&mix.querySelector('.vfx-bottle-canvas'))return;mount();refresh();});
   rebuild.observe(home,{childList:true});rebuild.observe(mix,{childList:true});
   document.addEventListener('visibilitychange',refresh);
